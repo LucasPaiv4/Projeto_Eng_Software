@@ -1,12 +1,12 @@
-from scibilityapi.models import Project, Hability
+from scibilityapi.models import Projetos, Habilidades
 from rest_framework import serializers
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjetoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Project
+        model = Projetos
         fields = ['id', 'nome', 'email', 'descricao']
         
-class HabilitySerializer(serializers.ModelSerializer):
+class HabilidadeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Hability
+        model = Habilidades
         fields = ['id', 'nome']
