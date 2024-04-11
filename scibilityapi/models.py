@@ -15,38 +15,6 @@ class Habilidades(models.Model):
         managed = False
         db_table = 'habilidades'
 
-
-class HabilidadesProjeto(models.Model):
-    projeto = models.OneToOneField('Projetos', models.DO_NOTHING, primary_key=True)  # The composite primary key (projeto_id, habilidade_id) found, that is not supported. The first column is selected.
-    habilidade = models.ForeignKey(Habilidades, models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = 'habilidades_projeto'
-        unique_together = (('projeto', 'habilidade'),)
-
-
-class HabilidadesUsuario(models.Model):
-    pessoa = models.OneToOneField('Usuario', models.DO_NOTHING, primary_key=True)  # The composite primary key (pessoa_id, habilidade_id) found, that is not supported. The first column is selected.
-    habilidade = models.ForeignKey(Habilidades, models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = 'habilidades_usuario'
-        unique_together = (('pessoa', 'habilidade'),)
-
-
-class Projetos(models.Model):
-    nome = models.CharField(max_length=50, blank=True, null=True)
-    email = models.CharField(max_length=50, blank=True, null=True)
-    senha = models.CharField(max_length=50, blank=True, null=True)
-    descricao = models.TextField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'projetos'
-
-
 class Usuario(models.Model):
     nome = models.CharField(max_length=50, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)
@@ -56,3 +24,37 @@ class Usuario(models.Model):
     class Meta:
         managed = False
         db_table = 'usuario'
+
+class Projetos(models.Model):
+    nome = models.CharField(max_length=50, blank=True, null=True)
+    email = models.CharField(max_length=50, blank=True, null=True)
+    senha = models.CharField(max_length=50, blank=True, null=True)
+    habilidades = models.ManyToManyField(Habilidades, through='HabilidadesProjeto')
+    descricao = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'projetos'
+        
+class HabilidadesProjeto(models.Model):
+    projeto = models.OneToOneField('Projetos', on_delete=models.CASCADE, primary_key=True)  # The composite primary key (projeto_id, habilidade_id) found, that is not supported. The first column is selected.
+    habilidade = models.ForeignKey(Habilidades, on_delete=models.CASCADE)
+
+    class Meta:
+        managed = False
+        db_table = 'habilidades_projeto'
+        unique_together = (('projeto', 'habilidade'),)
+
+
+class HabilidadesUsuario(models.Model):
+    pessoa = models.OneToOneField('Usuario', on_delete=models.CASCADE, primary_key=True)  # The composite primary key (pessoa_id, habilidade_id) found, that is not supported. The first column is selected.
+    habilidade = models.ForeignKey(Habilidades, on_delete=models.CASCADE)
+
+    class Meta:
+        managed = False
+        db_table = 'habilidades_usuario'
+        unique_together = (('pessoa', 'habilidade'),)
+
+
+
+
