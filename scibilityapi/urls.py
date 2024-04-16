@@ -4,6 +4,7 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register('projetos', views.ProjetoViewSet)
+router.register('usuarios', views.UsuarioViewSet)
 # router.register('habilidades', views.HabilidadeViewSet)
 
 projetos_router = routers.NestedDefaultRouter(router, 'projetos', lookup='projeto')
