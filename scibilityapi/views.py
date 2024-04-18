@@ -1,17 +1,26 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissionsOrAnonReadOnly
+from rest_framework.permissions import IsAuthenticated, AllowAny, DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ReadOnlyModelViewSet
 from .models import Projetos, Habilidades, HabilidadesProjeto, Usuario
 from .serializers import ProjetoSerializer, HabilidadeSerializer, UsuarioSerializer
+from .permissions import IsOwnerOrReadOnly
 
 class ProjetoViewSet(ModelViewSet):
     queryset = Projetos.objects.all()
     serializer_class = ProjetoSerializer
-    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        elif self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+        else:
+            permission_classes = [IsAuthenticated]  # Padrão para quaisquer outras ações
+        return [permission() for permission in permission_classes]
     
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user)
