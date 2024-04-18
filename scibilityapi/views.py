@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from .serializers import ProjetoSerializer, HabilidadeSerializer, UsuarioSeriali
 class ProjetoViewSet(ModelViewSet):
     queryset = Projetos.objects.all()
     serializer_class = ProjetoSerializer
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user)
@@ -37,16 +39,29 @@ class HabilidadeViewSet(ModelViewSet):
 class UsuarioViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated]
     
     @action(detail=False, methods=['GET', 'PUT'])
     def me(self, request):
-        (usuario, created) = Usuario.objects.get_or_create(user_id=request.user.id)
+        usuario = request.user.usuario
         if request.method == 'GET':
             serializer = UsuarioSerializer(usuario)
             return Response(serializer.data)
         elif request.method == 'PUT':
-            serializer = UsuarioSerializer(usuario, data=request.data)
+            serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+    
+    # @action(detail=False, methods=['GET', 'PUT'])
+    # def me(self, request):
+    #     (usuario, created) = Usuario.objects.get_or_create(user_id=request.user.id)
+    #     if request.method == 'GET':
+    #         serializer = UsuarioSerializer(usuario)
+    #         return Response(serializer.data)
+    #     elif request.method == 'PUT':
+    #         serializer = UsuarioSerializer(usuario, data=request.data)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data)
             
