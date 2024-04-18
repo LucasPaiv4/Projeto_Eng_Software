@@ -6,10 +6,6 @@ class HabilidadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Habilidades
         fields = ['id', 'nome']
-        
-    # def create(self, validated_data):
-    #     projeto_id = self.context['projeto_id']
-    #     return Habilidades.objects.create(projeto_id=projeto_id, **validated_data)
 
 class ProjetoSimplesSerializer(serializers.ModelSerializer):
     class Meta:

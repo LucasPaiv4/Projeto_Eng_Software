@@ -1,11 +1,12 @@
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny, DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ReadOnlyModelViewSet
-from .models import Projetos, Habilidades, HabilidadesProjeto, Usuario
+from .models import Projetos, Habilidades, HabilidadesProjeto, Usuario, HabilidadesUsuario
 from .serializers import ProjetoSerializer, HabilidadeSerializer, UsuarioSerializer
 from .permissions import IsOwnerOrReadOnly
 
@@ -48,19 +49,25 @@ class HabilidadeViewSet(ModelViewSet):
 class UsuarioViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     
-    @action(detail=False, methods=['GET', 'PUT'])
-    def me(self, request):
+    @action(detail=False, methods=['get'], url_path='me', permission_classes=[IsAuthenticated])
+    def get_me(self, request):
         usuario = request.user.usuario
-        if request.method == 'GET':
-            serializer = UsuarioSerializer(usuario)
-            return Response(serializer.data)
-        elif request.method == 'PUT':
-            serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+        serializer = self.get_serializer(usuario)
+        return Response(serializer.data)
+    
+    # @action(detail=False, methods=['GET', 'PUT'])
+    # def me(self, request):
+    #     usuario = request.user.usuario
+    #     if request.method == 'GET':
+    #         serializer = UsuarioSerializer(usuario)
+    #         return Response(serializer.data)
+    #     elif request.method == 'PUT':
+    #         serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data)
     
     # @action(detail=False, methods=['GET', 'PUT'])
     # def me(self, request):
@@ -73,4 +80,22 @@ class UsuarioViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Gen
     #         serializer.is_valid(raise_exception=True)
     #         serializer.save()
     #         return Response(serializer.data)
-            
+
+class HabilidadeUsuarioViewSet(ModelViewSet):
+    serializer_class = HabilidadeSerializer
+    
+    def get_queryset(self):
+        usuario_id = self.request.user.usuario.id
+        return Habilidades.objects.filter(habilidadesusuario__pessoa_id=usuario_id)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = request.user.usuario
+        habilidade = serializer.save()
+        HabilidadesUsuario.objects.create(pessoa=usuario, habilidade=habilidade)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def get_serializer_context(self):
+        return {'user_id': self.request.user.id}
