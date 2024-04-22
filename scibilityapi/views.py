@@ -6,13 +6,36 @@ from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ReadOnlyModelViewSet
-from .models import Projetos, Habilidades, HabilidadesProjeto, Usuario, HabilidadesUsuario
-from .serializers import ProjetoSerializer, HabilidadeSerializer, UsuarioSerializer
+from .models import Projetos, Habilidades, HabilidadesProjeto, Usuario, HabilidadesUsuario, InteresseProjeto
+from .serializers import ProjetoSerializer, HabilidadeSerializer, UsuarioSerializer, InteresseProjetoSerializer
 from .permissions import IsOwnerOrReadOnly
 
 class ProjetoViewSet(ModelViewSet):
     queryset = Projetos.objects.all()
     serializer_class = ProjetoSerializer
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def demonstrar_interesse(self, request, pk=None):
+        projeto = self.get_object()
+        usuario = request.user.usuario
+        # Verifica se o usuário já demonstrou interesse anteriormente
+        interesse_existente = InteresseProjeto.objects.filter(usuario=usuario, projeto=projeto).exists()
+        if not interesse_existente:
+            InteresseProjeto.objects.create(usuario=usuario, projeto=projeto)
+            return Response({"status": "interesse registrado"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"status": "interesse já registrado"}, status=status.HTTP_409_CONFLICT)
+        
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def remover_interesse(self, request, pk=None):
+        projeto = self.get_object()
+        usuario = request.user.usuario
+        try:
+            interesse = InteresseProjeto.objects.get(usuario=usuario, projeto=projeto)
+            interesse.delete()
+            return Response({"status": "interesse removido"}, status=status.HTTP_204_NO_CONTENT)
+        except InteresseProjeto.DoesNotExist:
+            return Response({"error": "interesse não encontrado"}, status=status.HTTP_404_NOT_FOUND)
     
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -99,3 +122,17 @@ class HabilidadeUsuarioViewSet(ModelViewSet):
     
     def get_serializer_context(self):
         return {'user_id': self.request.user.id}
+    
+class InteresseProjetoViewSet(ModelViewSet):
+    queryset = InteresseProjeto.objects.all()
+    serializer_class = InteresseProjetoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user.usuario)
+
+    def get_queryset(self):
+        # Filtrar interesses para o usuário logado apenas
+        if self.action == 'list':
+            return self.queryset.filter(usuario=self.request.user.usuario)
+        return self.queryset

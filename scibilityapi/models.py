@@ -58,6 +58,16 @@ class HabilidadesUsuario(models.Model):
         db_table = 'habilidades_usuario'
         unique_together = (('pessoa', 'habilidade'),)
 
+class InteresseProjeto(models.Model):
+    usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE, related_name='interesses')
+    projeto = models.ForeignKey('Projetos', on_delete=models.CASCADE, related_name='interessados')
+    
+    class Meta:
+        db_table = 'interesse_projeto'
+        unique_together = (('usuario', 'projeto'))
+    
+    def __str__(self):
+        return f'{self.usuario} interessado em {self.projeto}'
 
 
 

@@ -5,6 +5,7 @@ from . import views
 router = routers.DefaultRouter()
 router.register('projetos', views.ProjetoViewSet)
 router.register('usuarios', views.UsuarioViewSet)
+router.register('interesses', views.InteresseProjetoViewSet, basename='interesses')
 #router.register('usuarios/me/habilidades', views.HabilidadeUsuarioViewSet, basename='habilidades-usuario')
 # router.register('habilidades', views.HabilidadeViewSet)
 
