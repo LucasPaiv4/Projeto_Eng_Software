@@ -74,11 +74,18 @@ class UsuarioViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Gen
     serializer_class = UsuarioSerializer
     #permission_classes = [IsAuthenticated]
     
-    @action(detail=False, methods=['get'], url_path='me', permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get', 'patch'], url_path='me', permission_classes=[IsAuthenticated])
     def get_me(self, request):
-        usuario = request.user.usuario
-        serializer = self.get_serializer(usuario)
-        return Response(serializer.data)
+        if request.method == 'GET':
+            usuario = request.user.usuario
+            serializer = self.get_serializer(usuario)
+            return Response(serializer.data)
+        elif request.method == 'PATCH':
+            serializer = self.get_serializer(request.user.usuario, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=400)
     
     # @action(detail=False, methods=['GET', 'PUT'])
     # def me(self, request):

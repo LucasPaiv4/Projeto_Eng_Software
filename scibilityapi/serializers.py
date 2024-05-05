@@ -10,7 +10,7 @@ class HabilidadeSerializer(serializers.ModelSerializer):
 class ProjetoSimplesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projetos
-        fields = ['id', 'nome']
+        fields = ['id', 'nome', 'descricao']
  
 class UsuarioSimplesSerializer(serializers.ModelSerializer):
     nome_completo = serializers.SerializerMethodField(read_only=True)
@@ -24,13 +24,14 @@ class UsuarioSimplesSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(read_only=True)
     nome_completo = serializers.SerializerMethodField(read_only=True)
+    email = serializers.EmailField(read_only=True, source='user.email')
     habilidades = HabilidadeSerializer(many=True, read_only=True)
     projetos = ProjetoSimplesSerializer(many=True, read_only=True, source='user.projeto_usuario')
     projetos_interessados = serializers.SerializerMethodField()
     
     class Meta:
         model = Usuario
-        fields = ['id', 'user_id', 'nome_completo', 'descricao', 'projetos', 'habilidades', 'projetos_interessados']
+        fields = ['id', 'user_id', 'nome_completo','email', 'descricao', 'projetos', 'habilidades', 'projetos_interessados']
         
     def get_nome_completo(self, obj):
         return f'{obj.user.first_name} {obj.user.last_name}'
