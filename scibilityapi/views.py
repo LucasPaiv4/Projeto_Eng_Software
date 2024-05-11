@@ -6,6 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ReadOnlyModelViewSet
+
+from scibilityapi.utils import enviar_email_de_interesse
 from .models import Projetos, Habilidades, HabilidadesProjeto, Usuario, HabilidadesUsuario, InteresseProjeto
 from .serializers import ProjetoSerializer, HabilidadeSerializer, UsuarioSerializer, InteresseProjetoSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -22,6 +24,7 @@ class ProjetoViewSet(ModelViewSet):
         interesse_existente = InteresseProjeto.objects.filter(usuario=usuario, projeto=projeto).exists()
         if not interesse_existente:
             InteresseProjeto.objects.create(usuario=usuario, projeto=projeto)
+            enviar_email_de_interesse(projeto.email, projeto.nome, usuario.user.username, usuario.user.email)
             return Response({"status": "interesse registrado"}, status=status.HTTP_201_CREATED)
         else:
             return Response({"status": "interesse já registrado"}, status=status.HTTP_409_CONFLICT)
